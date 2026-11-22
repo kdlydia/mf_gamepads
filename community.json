@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "name": "mf_gamepads",
+  "min_version": "1.0.0",
+  "needs_lila": false,
+  "licence": "GPLv3",
+  "description": "Gamepad layouts for HIDNode, so south, left_x or dpad_up name the same control on a DualShock 4 or DualSense (USB or Bluetooth), a Switch Pro Controller or Joy-Con, an Xbox Wireless pad over Bluetooth, or any pad with the Android HID layout."
+}
