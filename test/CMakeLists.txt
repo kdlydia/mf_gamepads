@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
+
+set(MF_MIN_VERSION "1.0.0")
+set(MF_NEEDS_LILA OFF)
 project(mf_gamepads_test LANGUAGES C CXX)
 
 enable_testing()
@@ -6,6 +9,9 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
 
 add_compile_definitions(MAYAFLUX_PROJECT)
 
@@ -37,6 +43,11 @@ endif()
 file(GLOB_RECURSE _mf_gamepads_sources CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.cpp"
 )
+if(NOT _mf_gamepads_sources)
+    set(_mf_gamepads_empty_source "${CMAKE_CURRENT_BINARY_DIR}/empty_module.cpp")
+    file(WRITE "${_mf_gamepads_empty_source}" "")
+    list(APPEND _mf_gamepads_sources "${_mf_gamepads_empty_source}")
+endif()
 
 add_library(mf_gamepads OBJECT ${_mf_gamepads_sources})
 
@@ -50,6 +61,10 @@ target_include_directories(mf_gamepads PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../sr
 target_precompile_headers(mf_gamepads PUBLIC "${MayaFlux_PCH_FILE}")
 target_link_libraries(mf_gamepads PUBLIC MayaFlux::MayaFluxLib)
 
+if(MF_NEEDS_LILA)
+    target_link_libraries(mf_gamepads PUBLIC MayaFlux::MayaFluxHost)
+endif()
+
 add_executable(test_mf_gamepads
     test_mf_gamepads.cpp
     $<TARGET_OBJECTS:mf_gamepads>
@@ -57,6 +72,18 @@ add_executable(test_mf_gamepads
 
 target_precompile_headers(test_mf_gamepads REUSE_FROM mf_gamepads)
 target_link_libraries(test_mf_gamepads PRIVATE mf_gamepads MayaFlux::MayaFluxLib)
+
+if(WIN32)
+    # MayaFlux's imported targets expose their DLL locations to this expression.
+    # Place them beside the executable before CTest runs or discovers tests.
+    add_custom_command(TARGET test_mf_gamepads POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_RUNTIME_DLLS:test_mf_gamepads>
+            $<TARGET_FILE_DIR:test_mf_gamepads>
+        COMMAND_EXPAND_LISTS
+        VERBATIM
+    )
+endif()
 
 add_test(NAME mf_gamepads COMMAND test_mf_gamepads)
 

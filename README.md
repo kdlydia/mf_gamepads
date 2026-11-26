@@ -82,10 +82,12 @@ On Linux the pad's `/dev/hidraw*` node needs read access. MayaFlux's udev file c
 ## Tests
 
 ```sh
-cmake -G Ninja -B test/build -S test -DCMAKE_BUILD_TYPE=Release
-cmake --build test/build --parallel
-./test/build/test_mf_gamepads
+cmake --preset release
+cmake --build --preset release
+ctest --preset release
 ```
+
+Run `test/build/test_mf_gamepads` to see each check.
 
 No pad needs to be connected. Each test parses a descriptor captured from a real pad, builds reports, and feeds them to a `HIDNode` the way MayaFlux's HID backend does. It then checks that every button, stick, trigger and d-pad direction reads as the layout says, in every report format the pad sends.
 
