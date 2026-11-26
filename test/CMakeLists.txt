@@ -65,13 +65,31 @@ if(MF_NEEDS_LILA)
     target_link_libraries(mf_gamepads PUBLIC MayaFlux::MayaFluxHost)
 endif()
 
+# Prefer a GoogleTest installation already available on this machine.
+find_package(GTest QUIET)
+if(NOT GTest_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/releases/download/v1.18.0/googletest-1.18.0.tar.gz
+        URL_HASH SHA256=6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    set(BUILD_GMOCK OFF)
+    if(MSVC)
+        # MayaFlux projects use the DLL CRT; keep fetched GoogleTest compatible.
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    endif()
+    FetchContent_MakeAvailable(googletest)
+endif()
+
 add_executable(test_mf_gamepads
     test_mf_gamepads.cpp
     $<TARGET_OBJECTS:mf_gamepads>
 )
 
 target_precompile_headers(test_mf_gamepads REUSE_FROM mf_gamepads)
-target_link_libraries(test_mf_gamepads PRIVATE mf_gamepads MayaFlux::MayaFluxLib)
+target_link_libraries(test_mf_gamepads PRIVATE mf_gamepads MayaFlux::MayaFluxLib GTest::gtest)
 
 if(WIN32)
     # MayaFlux's imported targets expose their DLL locations to this expression.
@@ -85,7 +103,8 @@ if(WIN32)
     )
 endif()
 
-add_test(NAME mf_gamepads COMMAND test_mf_gamepads)
+include(GoogleTest)
+gtest_discover_tests(test_mf_gamepads DISCOVERY_MODE PRE_TEST)
 
 if(UNIX)
     execute_process(

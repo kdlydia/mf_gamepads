@@ -87,7 +87,7 @@ cmake --build --preset release
 ctest --preset release
 ```
 
-Run `test/build/test_mf_gamepads` to see each check.
+The tests use GoogleTest. CMake takes an installed GTest package, or downloads the pinned 1.18.0 release when there is none, so building them without a network needs GTest installed. `ctest` runs each pad's test on its own.
 
 No pad needs to be connected. Each test parses a descriptor captured from a real pad, builds reports, and feeds them to a `HIDNode` the way MayaFlux's HID backend does. It then checks that every button, stick, trigger and d-pad direction reads as the layout says, in every report format the pad sends.
 
